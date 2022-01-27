@@ -8,9 +8,22 @@ import (
 	"time"
 )
 
+type Pos struct {
+	row int
+	col int
+}
+
+func (this *Pos) add(p Pos) Pos {
+	return Pos{row: this.row + p.row, col: this.col + p.col}
+}
+
+// Checks if a given row and column are within the board space and have not been visited yet
+func (p *Pos) isValidMove() bool {
+	return p.row >= 0 && p.row < boardSize && p.col >= 0 && p.col < boardSize && board[p.row][p.col] == 0
+}
+
 // input, 0-based start position
-const startRow = 0
-const startCol = 0
+var start = Pos{row: 0, col: 0}
 
 const boardSize = 8
 
@@ -19,11 +32,20 @@ var board = make([][]int, boardSize)
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	for !knightTour() {
+	if knightTour() {
+		// A knight tour has been found. Printing the board.
+		for _, r := range board {
+			for _, m := range r {
+				fmt.Printf("%3d", m)
+			}
+			fmt.Println()
+		}
+	} else {
+		println("No tour found.")
 	}
 }
 
-var moves = []struct{ dr, dc int }{
+var moves = []Pos{
 	{2, 1},
 	{2, -1},
 	{1, 2},
@@ -34,11 +56,6 @@ var moves = []struct{ dr, dc int }{
 	{-2, -1},
 }
 
-// Checks if a given row and column are within the board space and have not been visited yet
-func isValidMove(r, c int) bool {
-	return r >= 0 && r < boardSize && c >= 0 && c < boardSize && board[r][c] == 0
-}
-
 // Attempt knight tour starting at startRow, startCol using Warnsdorff's rule
 // and random tie breaking.  If a tour is found, print it and return true.
 // Otherwise no backtracking, just return false.
@@ -46,63 +63,50 @@ func knightTour() bool {
 	for i := range board {
 		board[i] = make([]int, boardSize)
 	}
-	r := startRow
-	c := startCol
-	board[r][c] = 1 // first move
+	cur := start
+	board[cur.row][cur.col] = 1 // first move
 	for move := 2; move <= boardSize*boardSize; move++ {
-		minNext := boardSize
-		var mr, mc, nm int
+		minMovesCount := len(moves)
+		var best Pos
+		var nextMoveCandidates int
 	candidateMoves:
-		for _, cm := range moves {
-			cr := r + cm.dr
-			cc := c + cm.dc
-			if isValidMove(cr, cc) == false {
+		for _, move := range moves {
+			candidate := cur.add(move)
+			if candidate.isValidMove() == false {
 				continue
 			}
 
-			// cr, cc candidate legal move.
-			p := 0 // count possible next moves.
-			for _, m2 := range moves {
-				r2 := cr + m2.dr
-				c2 := cc + m2.dc
-				if isValidMove(r2, c2) == false {
-					continue
-				}
-
-				p++
-				if p > minNext { // bail out as soon as it's eliminated
-					continue candidateMoves
+			nextMovesCount := 0 // count possible next moves.
+			for _, move2 := range moves {
+				candidate2 := candidate.add(move2)
+				if candidate2.isValidMove() {
+					nextMovesCount++
+					if nextMovesCount > minMovesCount { // bail out as soon as it's eliminated
+						continue candidateMoves
+					}
 				}
 			}
-			if p < minNext { // it's better.  keep it.
-				minNext = p // new min possible next moves
-				nm = 1      // number of candidates with this p
-				mr = cr     // best candidate move
-				mc = cc
+			if nextMovesCount < minMovesCount { // it's better.  keep it.
+				minMovesCount = nextMovesCount // new count of possible 2nd moves
+				nextMoveCandidates = 1         // number of candidates with this count
+				best = candidate               // making it the best candidate move
 				continue
 			}
-			// it ties for best so far.
-			// keep it with probability 1/(number of tying moves)
-			nm++                    // number of tying moves
-			if rand.Intn(nm) == 0 { // one chance to keep it
-				mr = cr
-				mc = cc
+			// Otherwise, it ties for the best move.
+			nextMoveCandidates++ // Updating the number of tying moves
+			// Using a dice with the 1/(number of tying moves) success probability
+			// If it gets lucky, it will be chosen
+			if rand.Intn(nextMoveCandidates) == 0 {
+				best = candidate
 			}
 		}
-		if nm == 0 { // no legal move
+		if nextMoveCandidates == 0 { // no legal move
 			return false
 		}
 		// make selected move
-		r = mr
-		c = mc
-		board[r][c] = move
+		cur = best
+		board[cur.row][cur.col] = move
 	}
-	// tour complete.  print board.
-	for _, r := range board {
-		for _, m := range r {
-			fmt.Printf("%3d", m)
-		}
-		fmt.Println()
-	}
+
 	return true
 }

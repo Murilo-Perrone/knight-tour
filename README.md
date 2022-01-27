@@ -15,7 +15,7 @@ This is a collection of knight tour solutions written in different languages. No
     13 42 15 30 11 64 25 28 
     16 31 12 41 26 29 10 63
     ```
-  * [warnsdorffsRule-recursive.main.kts](warnsdorffsRule-recursive.main.kts) - Finds a solution using warnsdorffs rule and recursion.
+  * [warnsdorffsRule-recursive.main.kts](warnsdorffsRule-recursive.main.kts) - Finds a solution using warnsdorffs rule and recursion. Output: 
     ```
      1  4 57 20 47  6 49 22 
     34 19  2  5 58 21 46  7 
@@ -62,7 +62,7 @@ This is a collection of knight tour solutions written in different languages. No
     ```
 
 ## Go
-  * [warnsdorffsRule.go](warnsdorffsRule.go) - Finds a solution using warnsdorffs rule. Output: 
+  * [warnsdorffsRule.go](warnsdorffsRule.go) - Finds a solution using warnsdorffs rule and randomized choices. Output: 
     ```
      1  4 35 20 47  6 43 22
     34 19  2  5 42 21 46  7
